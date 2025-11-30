@@ -5,14 +5,21 @@ import http from 'http'
 import path from 'path'
 import { Server } from 'socket.io'
 dotenv.config()
+
 const app = express()
 const server = http.createServer(app)
 const io = new Server(server)
 
 app.use(cors())
 
-app.get('/', (req, res) => {
-  res.json({ message: 'Hello World!' })
+const __dirname = path.resolve()
+
+app.get('/health', (req, res) => {
+  res.json({ message: 'Healthy' })
+})
+
+app.get('/books', (req, res) => {
+  res.json({ message: 'Books' })
 })
 
 io.on('connection', socket => {
@@ -46,6 +53,13 @@ io.on('connection', socket => {
 })
 
 const port = process.env.PORT || 3000
+
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../frontend/dist')))
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/dist/index.html'))
+  })
+}
 
 server.listen(port, () => {
   console.log('Server is running on port 3000')
